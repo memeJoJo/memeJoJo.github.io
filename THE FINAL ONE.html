@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Логичные предписания Project Moon</title>
+<style>
+body { background:#111; color:#eee; font-family:"Comic Neue", sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; margin:0; }
+#logo { width:180px; margin-bottom:20px; }
+h1 { font-size:2.5rem; margin-bottom:10px; }
+#prescriptBox { background: rgba(255,255,255,0.05); padding:30px; border-radius:12px; width:80%; max-width:600px; text-align:center; }
+#prescript { font-size:1.2rem; margin:20px 0; line-height:1.6; }
+button { background:#333; color:#eee; border:none; padding:12px 24px; margin:10px; font-size:1rem; cursor:pointer; border-radius:8px; transition:0.3s; }
+button:hover { background:#555; }
+#muteBtn { background:#222; margin-top:20px; }
+</style>
+</head>
+<body>
+
+<img id="logo" src="https://fireisgood.github.io/prescript/_app/immutable/assets/index_logo.CL9oWPv4.png" alt="Index Logo">
+<h1>Предписание</h1>
+
+<div id="prescriptBox">
+  <div id="prescript">Нажмите кнопку, чтобы получить предписание.</div>
+  <button onclick="showPrescript()">Получить предписание</button>
+  <button id="muteBtn">Включить музыку</button>
+</div>
+
+<audio id="bgMusic" src="bgmusic.mp3" autoplay loop muted></audio>
+
+<script>
+// --- объекты с формами и допустимыми местами для конкретных действий ---
+const objects = [
+  { name:'книга', gender:'f', forms:{acc:'книгу', prep:'книге'}, actions:{'запиши в':['полка','стол'], 'положи':['стол','полка'], 'переставь':['стол','полка']} },
+  { name:'блокнот', gender:'m', forms:{acc:'блокнот', prep:'блокноте'}, actions:{'запиши в':['стол','шкаф'], 'положи':['стол'], 'переставь':['стол','шкаф']} },
+  { name:'монета', gender:'f', forms:{acc:'монету', prep:'монете'}, actions:{'положи':['стол','полка'], 'переставь':['стол','полка'], 'посмотри на':[]} },
+  { name:'стакан', gender:'m', forms:{acc:'стакан', prep:'стакане'}, actions:{'положи':['стол'], 'переставь':['стол'], 'посмотри на':[]} },
+  { name:'подушка', gender:'f', forms:{acc:'подушку', prep:'подушке'}, actions:{'положи':['кровать','пол'], 'переставь':['кровать','пол']} },
+  { name:'дерево', gender:'n', forms:{acc:'дерево', prep:'дереве'}, actions:{'посмотри на':[]} },
+  { name:'полка', gender:'f', forms:{acc:'полку', prep:'полке'}, actions:{'положи':['стена'], 'переставь':['стена']} }
+];
+
+// --- места с формами ---
+const places = [
+  { name:'полка', gender:'f', forms:{acc:'полку', prep:'полке'} },
+  { name:'стол', gender:'m', forms:{acc:'стол', prep:'столе'} },
+  { name:'шкаф', gender:'m', forms:{acc:'шкаф', prep:'шкафе'} },
+  { name:'кровать', gender:'f', forms:{acc:'кровать', prep:'кровати'} },
+  { name:'пол', gender:'m', forms:{acc:'пол', prep:'поле'} },
+  { name:'стена', gender:'f', forms:{acc:'стену', prep:'стене'} }
+];
+
+// --- местоимения ---
+const pronouns = { m:{prep:'нём', acc:'его'}, f:{prep:'ней', acc:'её'}, n:{prep:'нём', acc:'его'}, pl:{prep:'них', acc:'их'} };
+
+// --- действия человека ---
+const humanActions = [
+  'Закрой глаза на 5 секунд',
+  'Ничего не говори',
+  'Глубоко вдохни',
+  'Подними правую руку',
+  'Посчитай до десяти',
+  'Сосредоточься на дыхании',
+  'Медленно опусти руки',
+  'Внимательно прислушайся к звукам вокруг'
+];
+
+function random(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function showPrescript(){
+  let steps = [];
+  const numSteps = Math.floor(Math.random()*2)+1;
+
+  for(let i=0;i<numSteps;i++){
+    if(Math.random()<0.5){ // объектное действие
+      let obj = random(objects);
+      let availableActions = Object.keys(obj.actions);
+      if(availableActions.length===0) continue;
+      let action = random(availableActions);
+      let validPlaces = obj.actions[action];
+      let place = null;
+      if(validPlaces.length>0){
+        place = random(places.filter(p=>validPlaces.includes(p.name)));
+      }
+
+      let objAcc = obj.forms.acc;
+      let placeStr = place ? ' на ' + place.forms.acc : '';
+      let pronounPrep = pronouns[obj.gender].prep;
+
+      if(action==='посмотри на'){
+        steps.push(`${action} ${objAcc}${place ? ' ' + place.forms.prep : ''}. Сосредоточься на ${pronounPrep}.`);
+      } else if(['положи','переставь','запиши в'].includes(action)){
+        steps.push(`${action} ${objAcc}${placeStr}.`);
+      } else if(action==='открой'){
+        steps.push(`${action} ${objAcc}${place ? ' ' + place.forms.prep : ''}.`);
+      } else if(action==='прочитай'){
+        steps.push(`${action} ${objAcc}. Обрати внимание на детали.`);
+      } else if(action==='переверни'){
+        steps.push(`${action} ${objAcc}.`);
+      } else if(action==='посчитай'){
+        steps.push(`${action} ${objAcc}.`);
+      }
+    } else { // человеческое действие
+      steps.push(random(humanActions) + '.');
+    }
+  }
+
+  if(Math.random()<=0.02) steps.push("Мазик, иди нахуй");
+
+  document.getElementById('prescript').textContent = steps.join(' ');
+}
+
+const bgMusic = document.getElementById('bgMusic');
+const muteBtn = document.getElementById('muteBtn');
+muteBtn.addEventListener('click',()=>{
+  bgMusic.muted=!bgMusic.muted;
+  muteBtn.textContent = bgMusic.muted?"Включить музыку":"Выключить музыку";
+});
+</script>
+</body>
+</html>
